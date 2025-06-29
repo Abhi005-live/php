@@ -1,32 +1,48 @@
 <?php
-session_start(); // 🔴 Must be first — before ANY output or include
-include 'config.php';
+session_start();
+include 'config.php'; // DB connection: $conn = new mysqli(...);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT id, password FROM users WHERE username=?");
+    // Fetch id, hashed password, and role
+    $stmt = $conn->prepare("SELECT id, password, role FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $stmt->store_result();
 
     if ($stmt->num_rows === 1) {
-        $stmt->bind_result($id, $hashedPassword);
+        $stmt->bind_result($id, $hashedPassword, $role);
         $stmt->fetch();
+
         if (password_verify($password, $hashedPassword)) {
             $_SESSION['user_id'] = $id;
-            echo "Login successful";
+            $_SESSION['username'] = $username;
+            $_SESSION['role'] = $role;
+
+            // Redirect based on role
+            if ($role === 'admin') {
+                header("Location: admin.php");
+            } else {
+                header("Location: user_dashboard.php");
+            }
+            exit();
         } else {
-            echo "Invalid credentials";
+            echo "❌ Invalid password.";
         }
     } else {
-        echo "Invalid credentials";
+        echo "❌ Username not found.";
     }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
+
+<!-- HTML Form -->
 <form method="POST">
-  <input name="username" required>
-  <input type="password" name="password" required>
-  <button type="submit">Login</button>
+    <input name="username" required placeholder="Username">
+    <input type="password" name="password" required placeholder="Password">
+    <button type="submit">Login</button>
 </form>
