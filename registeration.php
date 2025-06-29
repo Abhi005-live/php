@@ -1,19 +1,29 @@
-<?php include 'config.php'; ?>
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+include 'config.php';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash password
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-    $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-    $stmt->bind_param("ss", $username, $password);
-    $stmt->execute();
+    // Default role is 'user'
+    $role = 'user';
 
-    echo "Registration successful";
+    // Insert username, hashed password, and role
+    $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $username, $password, $role);
+
+    if ($stmt->execute()) {
+        echo "✅ User registered successfully!";
+    } else {
+        echo "❌ Registration failed: " . $stmt->error;
+    }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
 <form method="POST">
-  <input name="username" required>
-  <input type="password" name="password" required>
+  <input name="username" required placeholder="Username">
+  <input type="password" name="password" required placeholder="Password">
   <button type="submit">Register</button>
 </form>
-
