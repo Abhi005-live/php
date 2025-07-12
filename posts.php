@@ -23,7 +23,6 @@ $stmt->bind_param("ii", $limit, $offset);
 $stmt->execute();
 $posts = $stmt->get_result();
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>

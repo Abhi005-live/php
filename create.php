@@ -1,17 +1,38 @@
-<?php include 'config.php'; ?>
+<?php
+session_start();
+include 'config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+if (isset($_POST['submit'])) {
+    $title = $_POST['title'];
+    $content = $_POST['content'];
+    $user_id = $_SESSION['user_id'];
+
+    $stmt = $conn->prepare("INSERT INTO posts (title, content, user_id) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $title, $content, $user_id);
+
+    if ($stmt->execute()) {
+        header("Location: user_dashboard.php"); // Redirect to dashboard
+        exit();
+    } else {
+        $error = "❌ Failed to create post.";
+    }
+}
+?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add New Post</title>
-    <!-- Google Fonts -->
+    <title>Create Post</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: url('https://png.pngtree.com/background/20210715/original/pngtree-colourful-background-for-business-social-media-post-free-vector-instagram-and-picture-image_1294714.jpg') no-repeat center center fixed;
-            background-size: cover;
+            background: linear-gradient(to bottom right, #f2f2f2, #dce9f9);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,21 +41,19 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 35px 45px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            width: 500px;
-            max-width: 90%;
-            backdrop-filter: blur(5px);
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 480px;
         }
 
         h2 {
             font-family: 'Playfair Display', serif;
+            font-size: 28px;
             text-align: center;
             margin-bottom: 25px;
-            color: #2c3e50;
-            font-size: 28px;
+            color: #333;
         }
 
         input[type="text"],
@@ -46,7 +65,6 @@
             border-radius: 8px;
             font-size: 16px;
             background: #fdfdfd;
-            font-family: 'Poppins', sans-serif;
         }
 
         textarea {
@@ -64,31 +82,25 @@
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s ease;
-            font-family: 'Poppins', sans-serif;
         }
 
         button:hover {
             background: linear-gradient(to right, #0056b3, #0083cc);
         }
 
-        .success {
+        .message {
             margin-top: 15px;
             text-align: center;
-            color: #27ae60;
             font-weight: bold;
-            font-size: 16px;
-            font-family: 'Poppins', sans-serif;
+            color: red;
         }
 
         .back-link {
             display: block;
             text-align: center;
-            margin-top: 25px;
+            margin-top: 20px;
             color: #007BFF;
             text-decoration: none;
-            font-weight: bold;
-            font-family: 'Poppins', sans-serif;
         }
 
         .back-link:hover {
@@ -97,30 +109,17 @@
     </style>
 </head>
 <body>
-
 <div class="card">
-    <h2>📝 Add New Post</h2>
+    <h2>📝 Create New Post</h2>
     <form method="POST">
-        <input type="text" name="title" placeholder="Enter title" required>
-        <textarea name="content" placeholder="Write your content here..." required></textarea>
-        <button type="submit" name="submit">Publish Post</button>
+        <input type="text" name="title" placeholder="Enter post title" required>
+        <textarea name="content" placeholder="Write your post here..." required></textarea>
+        <button type="submit" name="submit">Publish</button>
     </form>
 
-    <?php
-    if (isset($_POST['submit'])) {
-        $title = $_POST['title'];
-        $content = $_POST['content'];
+    <?php if (isset($error)) echo "<div class='message'>$error</div>"; ?>
 
-        $stmt = $conn->prepare("INSERT INTO posts (title, content) VALUES (?, ?)");
-        $stmt->bind_param("ss", $title, $content);
-        $stmt->execute();
-
-        echo "<p class='success'>✅ Post added successfully!</p>";
-    }
-    ?>
-
-    <a href="index.php" class="back-link">← Back to Posts</a>
+    <a href="user_dashboard.php" class="back-link">← Back to Dashboard</a>
 </div>
-
 </body>
 </html>
